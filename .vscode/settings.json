@@ -1,0 +1,7 @@
+{
+    "github.copilot.chat.agent.currentEditorContext.enabled": false,
+    "editor.quickSuggestions": { "other": true },
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.parameterHints.enabled": true,
+    "github.copilot.enable": {"julia": false},
+}
