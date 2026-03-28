@@ -21,14 +21,14 @@ function naive(X, Y)
         throw(ArgumentError("our assumption is that n >= 2k"))
     end
 
-    X1 = [stack(X)' ones(n)]
-    Y1 = stack(Y)'
+    X1 = [stack(X)' ones(n)] #stack column vectors x_i into a matrix as rows and add a column of ones
+    Y1 = stack(Y)' #stack column vectors y_i into a matrix
     
     
-    Qb = X1\Y1
-    b = Qb[end, :]
-    Q = Qb[1:end-1, :]'
-    F = qr(Q)
+    Qb = X1\Y1 #Solve the system by least squares method
+    b = Qb[end, :] #take b out of the matrix
+    Q = Qb[1:end-1, :]' #take Q^T out and transpose it once more so we get Q
+    F = qr(Q) #Find the QR decomposition
 
     return (Matrix(F.Q), b)
 end
@@ -50,28 +50,28 @@ function kabsch(X, Y)
         throw(DimensionMismatch("tuples in X and Y must have the same dimension")) 
     end
     
-    n = length(X)
-    k = length(X[1])
+    n = length(X) #num of points
+    k = length(X[1]) #dimension
     
-    x1 = (1/n).*(reduce(.+, X))
-    y1 = (1/n).*(reduce(.+, Y))
+    x1 = (1/n).*(reduce(.+, X)) #calculate x_
+    y1 = (1/n).*(reduce(.+, Y)) #calculate y_
     
-    X = [X[i] .- x1 for i in 1:n]
-    Y = [Y[i] .- y1 for i in 1:n]
+    X = [X[i] .- x1 for i in 1:n] #subtract x_ from every x_i to obtain x_i'
+    Y = [Y[i] .- y1 for i in 1:n] #subtract y_ from every y_i to obtain y_i'
     
-    Xm = stack(X)
-    Ym = stack(Y)
+    Xm = stack(X) #order them into a matrix
+    Ym = stack(Y) # ^ 
 
-    C = Ym*Xm'
-    Cs = svd(C)
-    U = Cs.U 
-    Vt = Cs.Vt 
-    D = diagm(ones(k))
-    d = sign(det(U * Vt))
-    D[k,k] = d
-    Q = U*D*Vt
+    C = Ym*Xm' #calculate the product Y'X'^T
+    Cs = svd(C) #obtain the svd
+    U = Cs.U  #take out U from svd
+    Vt = Cs.Vt #take out V^T
+    D = diagm(ones(k)) #construct an identity of size k
+    d = sign(det(U * Vt)) #find d = +-1 
+    D[k,k] = d #put d into matrix D
+    Q = U*D*Vt #obtain our orthogonal matrix Q
     
-    b = collect(y1) - Q*collect(x1)
+    b = collect(y1) - Q*collect(x1) #get b
     
     return (Q, b)
 end
