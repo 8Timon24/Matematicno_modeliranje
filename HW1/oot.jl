@@ -1,9 +1,8 @@
 using LinearAlgebra
 """
-The function naive takes in X, Y vectors of length n containing k-tuples, 
+The function naive takes in 2 vectors with length n of k-tuples, 
 these represent the input and output data (points before and after a rigid transformation) 
-for calculating the translation vector b and a rotation matrix Q. It returns Q, a kxk matrix, 
-and b, a column vector of length k, as a 2-tuple
+for calculating the translation vector b and a rotation matrix Q. It returns Q and b as a 2-tuple
 """
 function naive(X, Y)
     if isempty(X) || isempty(Y)
@@ -11,7 +10,7 @@ function naive(X, Y)
     elseif length(X) != length(Y)
         throw(DimensionMismatch("lengths of the input vectors X and Y arent equal"))
     elseif length(X[1]) != length(Y[1])
-        throw(DimensionMismatch("tuples in X and Y must have the same dimension")) 
+        throw(DimensionMismatch("sizes of tuples arent equal")) 
     end
 
     n = length(X); #num of points
@@ -21,18 +20,25 @@ function naive(X, Y)
         throw(ArgumentError("our assumption is that n >= 2k"))
     end
 
-    X1 = [stack(X)' ones(n)] #stack column vectors x_i into a matrix as rows and add a column of ones
-    Y1 = stack(Y)' #stack column vectors y_i into a matrix
+    X1 = [stack(X)' ones(n)]
+    Y1 = stack(Y)'
     
     
-    Qb = X1\Y1 #Solve the system by least squares method
-    b = Qb[end, :] #take b out of the matrix
-    Q = Qb[1:end-1, :]' #take Q^T out and transpose it once more so we get Q
-    F = qr(Q) #Find the QR decomposition
+    Qb = X1\Y1
+    b = Qb[end, :]
+    Q = Qb[1:end-1, :]'
+    F = qr(Q)
 
-    return (Matrix(F.Q), b)
+    #After learning a bit about what qr returns and potentially distorts, it would seem the
+    #sign of the columns in Q from qr can differ compared to the ones in the original Q
+    #and that happens because we get the original matrix as a product of columns of Q -> q_i with diagonal 
+    #elements of R->r_ii, so in order to keep the same orientation we "force" R_ii to be positive, 
+    #although we dont explicitly do that to R because it would be a waste, so we just act like it is and
+    #fix our orthogonal Q accordingly 
+    d = sign.(diag(Matrix(F.R))) #here we collect signs of diagonal elements of R into a vector  
+    Q_new = Matrix(F.Q) * Diagonal(d) #we have to multiply Q_new with a diagonal matrix not a vector
+    return (Q_new, b)
 end
-
 
 """
 The function kabsch takes two vectors of length n containing k-tuples,
