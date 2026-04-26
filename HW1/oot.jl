@@ -5,21 +5,10 @@ these represent the input and output data (points before and after a rigid trans
 for calculating the translation vector b and a rotation matrix Q. It returns Q and b as a 2-tuple
 """
 function naive(X, Y)
-    if isempty(X) || isempty(Y)
-        throw(ArgumentError("X and Y must not be empty"))
-    elseif length(X) != length(Y)
-        throw(DimensionMismatch("lengths of the input vectors X and Y arent equal"))
-    elseif length(X[1]) != length(Y[1])
-        throw(DimensionMismatch("sizes of tuples arent equal")) 
-    end
 
     n = length(X); #num of points
     k = length(X[1]); #the dimension 
     
-    if n < 2*k
-        throw(ArgumentError("our assumption is that n >= 2k"))
-    end
-
     X1 = [stack(X)' ones(n)]
     Y1 = stack(Y)'
     
@@ -48,14 +37,7 @@ and returns them as a tuple (Q, b). The inputs X and Y are vectors of
 n-tuples, Q is a kxk matrix, and b is a column vector of length k. 
 """
 function kabsch(X, Y)
-    if isempty(X) || isempty(Y)
-        throw(ArgumentError("X and Y must not be empty"))
-    elseif length(X) != length(Y)
-        throw(DimensionMismatch("lengths of the input vectors X and Y arent equal"))
-    elseif length(X[1]) != length(Y[1])
-        throw(DimensionMismatch("tuples in X and Y must have the same dimension")) 
-    end
-    
+
     n = length(X) #num of points
     k = length(X[1]) #dimension
     
@@ -73,7 +55,7 @@ function kabsch(X, Y)
     U = Cs.U  #take out U from svd
     Vt = Cs.Vt #take out V^T
     D = diagm(ones(k)) #construct an identity of size k
-    d = sign(det(U * Vt)) #find d = +-1 
+    d = -sign(det(U * Vt)) #find d = +-1 
     D[k,k] = d #put d into matrix D
     Q = U*D*Vt #obtain our orthogonal matrix Q
     
