@@ -1,0 +1,54 @@
+using JLD2
+include("intersectionOfCurves.jl")
+
+data = load("data.jld2")
+keys(data)                         # check variable names first
+
+p, pdot = data["p"], data["pdot"]
+q, qdot = data["q"], data["qdot"]
+
+res = intersectionOfCurves(p, pdot, (-2π, 2π),
+                             q, qdot, (-2π, 2π), 0.1)
+length(res.P)                      # how many intersections
+res.P                              # print them
+
+JLD2  specific:
+using JLD2
+
+# save variables
+@save "data.jld2" p pdot q qdot
+# load as dict (safest)
+data = load("data.jld2")
+keys(data)
+p = data["p"]
+q = data["q"]
+
+Functions: 
+# always start fresh session to avoid const conflicts
+include("intersectionOfCurves.jl")
+
+res = intersectionOfCurves(p, pdot, (-2π, 2π), q, qdot, (-2π, 2π), 0.1)
+
+res.P    # Newton-refined intersections
+res.Q    # raw polychain intersections
+
+intersectionOfCurves(p, pdot, intp, q, qdot, intq, h;
+    polychains = false,   # also return polychain points
+    maxiter   = 1000,    # Newton iteration limit
+    tolerance = 1e-12)   # convergence threshold
+
+# 1. build polychain with step h
+# 2. find segment intersections
+# 3. refine with Newton's method
+
+# Newton step:
+# F  = p(t) - q(u)   [R²]
+# JF = [ṗ(t) -q̇(u)]  [2×2]
+# x -= JF \ F
+
+# d1*d2 < 0 AND d3*d4 < 0
+# → segments straddle each other
+# → proper crossing exists
+
+# d == 0 → collinear / endpoint
+# → check liesOnLineSegment
